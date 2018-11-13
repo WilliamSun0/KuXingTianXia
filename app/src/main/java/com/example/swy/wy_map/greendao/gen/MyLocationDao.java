@@ -1,5 +1,6 @@
 package com.example.swy.wy_map.greendao.gen;
 
+import java.util.List;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteStatement;
 
@@ -8,6 +9,8 @@ import org.greenrobot.greendao.Property;
 import org.greenrobot.greendao.internal.DaoConfig;
 import org.greenrobot.greendao.database.Database;
 import org.greenrobot.greendao.database.DatabaseStatement;
+import org.greenrobot.greendao.query.Query;
+import org.greenrobot.greendao.query.QueryBuilder;
 
 import com.example.swy.wy_map.Entity.MyLocation;
 
@@ -48,6 +51,7 @@ public class MyLocationDao extends AbstractDao<MyLocation, Long> {
         public final static Property GpsAccuracyStatus = new Property(21, int.class, "GpsAccuracyStatus", false, "GPS_ACCURACY_STATUS");
     }
 
+    private Query<MyLocation> route_LocationListQuery;
 
     public MyLocationDao(DaoConfig config) {
         super(config);
@@ -358,4 +362,19 @@ public class MyLocationDao extends AbstractDao<MyLocation, Long> {
         return true;
     }
     
+    /** Internal query to resolve the "locationList" to-many relationship of Route. */
+    public List<MyLocation> _queryRoute_LocationList(Long routeId) {
+        synchronized (this) {
+            if (route_LocationListQuery == null) {
+                QueryBuilder<MyLocation> queryBuilder = queryBuilder();
+                queryBuilder.where(Properties.RouteId.eq(null));
+                queryBuilder.orderRaw("T.'POINT_TIME' ASC");
+                route_LocationListQuery = queryBuilder.build();
+            }
+        }
+        Query<MyLocation> query = route_LocationListQuery.forCurrentThread();
+        query.setParameter(0, routeId);
+        return query.list();
+    }
+
 }

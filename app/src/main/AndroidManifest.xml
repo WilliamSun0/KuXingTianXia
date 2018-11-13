@@ -43,7 +43,7 @@
 
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="0cee5b4fcf2506423461f5ca9bd1ab34">
+            android:value="93debdee7538d5802d181ed0c9c2cfd9">
 
         </meta-data>
         <activity
@@ -59,6 +59,20 @@
         <activity android:name="com.amap.api.maps.offlinemap.OfflineMapActivity"
             android:screenOrientation="portrait"/>
         <service android:name="com.amap.api.location.APSService"/>
+        <service
+            android:name=".Service.LocationService"
+            >
+            <intent-filter>
+                <action android:name="com.example.swy.wy_map.LocationService"></action>
+            </intent-filter>
+        </service>
+        <!--<service-->
+            <!--android:name=".Service.LocationHelperService"-->
+            <!--android:process=":remote2">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="com.example.swy.wy_map.LocationHelperService"></action>-->
+            <!--</intent-filter>-->
+        <!--</service>-->
     </application>
 
 </manifest>

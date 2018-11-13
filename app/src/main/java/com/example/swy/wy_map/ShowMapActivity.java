@@ -2,12 +2,17 @@ package com.example.swy.wy_map;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.icu.text.SimpleDateFormat;
+import android.location.LocationListener;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -25,6 +30,10 @@ import android.view.MenuItem;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
@@ -39,22 +48,29 @@ import com.amap.api.maps.UiSettings;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.MyLocationStyle;
 import com.example.swy.wy_map.Entity.Route;
+import com.example.swy.wy_map.Service.LocationService;
+import com.example.swy.wy_map.Service.LocationSource_Listener;
 import com.example.swy.wy_map.dao.SaveLocation;
 import com.example.swy.wy_map.dao.SaveRoute;
 
 import java.util.Date;
 
 public class ShowMapActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,LocationSource,AMapLocationListener {
+        implements NavigationView.OnNavigationItemSelectedListener,LocationSource, AMapLocationListener {
+
 
     private MapView mapView;
-
     private AMap aMap;
 
     public static AMapLocationClient mLocationClient = null;
     public static AMapLocationClientOption mLocationOption = null;
 
-    private OnLocationChangedListener mListener;
+    private LocationService.LocationServiceBinder mybind;
+
+
+    private LocationSource.OnLocationChangedListener mListener;
+
+    boolean fabClick = false;
 
     // 标识首次定位
     private boolean isFirstLocation = true;
@@ -80,13 +96,50 @@ public class ShowMapActivity extends AppCompatActivity
             initGaoDeMap();
         }
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        Intent bindService = new Intent(ShowMapActivity.this,LocationService.class);
+        bindService(bindService,connection,BIND_AUTO_CREATE);
+
+        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        //ImageButton buttonStart = (ImageButton)findViewById(R.id.btn_add);
+
+        //final Animation translateAnimation = AnimationUtils.loadAnimation(this, R.anim.view_animation);
+        // 步骤2:创建 动画对象 并传入设置的动画效果xml文件
+
+       // buttonStart.startAnimation(translateAnimation);
+
+        //buttonStart.layout();
+
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startReportRoute();
+
+                fab.hide();
+//                if (fabClick){
+//                    Snackbar.make(view, "正在暂停", Snackbar.LENGTH_LONG)
+//                            .setAction("结束", new View.OnClickListener() {
+//                                @Override
+//                                public void onClick(View view) {
+//
+//                                    stopLocationService();
+//                                }
+//                            }).show();
+//                    fabClick = false;
+//                }else {
+//                    startLocationService();
+//                    Snackbar.make(view, "开始记录路线", Snackbar.LENGTH_LONG)
+//                            .setAction("取消", new View.OnClickListener() {
+//                                @Override
+//                                public void onClick(View view) {
+//                                    stopLocationService();
+//                                }
+//                            }).show();
+//                    fabClick = true;
+
             }
         });
+
 
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -94,12 +147,27 @@ public class ShowMapActivity extends AppCompatActivity
 
     }
 
-    protected void startReportRoute(){
-        Date startTime = new Date();
-        Route route = new Route(null,startTime,null,null);
-        SaveRoute.insertRoute(route);
-        //SaveLocation.insertLocation();
+    private void startLocationService(){
+        getApplicationContext().startService(new Intent(this, LocationService.class));
     }
+    private void stopLocationService() {
+        getApplicationContext().stopService(new Intent(this, LocationService.class));
+    }
+
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mybind = (LocationService.LocationServiceBinder) service;
+            mybind.pauseLocate();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+
 
     @Override
     protected void onPause() {
@@ -136,6 +204,8 @@ public class ShowMapActivity extends AppCompatActivity
         aMap.getUiSettings().setZoomControlsEnabled(false);
         // 设置地图默认的指南针是否显示
         aMap.getUiSettings().setCompassEnabled(true);
+
+
         // 设置定位监听
         aMap.setLocationSource(this);
         // 设置默认定位按钮是否显示
@@ -149,14 +219,15 @@ public class ShowMapActivity extends AppCompatActivity
      * 初始化高德地图
      */
     public void initGaoDeMap() {
+        //ConstraintLayout c = findViewById(R.id.main_map_layout);
         // 初始化定位
-        mLocationClient = new AMapLocationClient(getApplicationContext());
+        mLocationClient = new AMapLocationClient(this);
         // 设置高德地图定位回调监听
         mLocationClient.setLocationListener(this);
         // 初始化AMapLocationClientOption对象
         mLocationOption = new AMapLocationClientOption();
         //设置定位场景，目前支持三种场景（签到、出行、运动，默认无场景）
-        mLocationOption.setLocationPurpose(AMapLocationClientOption.AMapLocationPurpose.Transport);
+        mLocationOption.setLocationPurpose(AMapLocationClientOption.AMapLocationPurpose.SignIn);
 
         if(null != mLocationClient){
             mLocationClient.setLocationOption(mLocationOption);
@@ -200,66 +271,9 @@ public class ShowMapActivity extends AppCompatActivity
         // 启动高德地图定位
         mLocationClient.startLocation();
 
+        Log.d("swy", "initGaoDeMap: startlocation");
 
     }
-
-    @TargetApi(Build.VERSION_CODES.N)
-    @Override
-    public void onLocationChanged(AMapLocation aMapLocation) {
-        // 解析AMapLocation对象
-        // 判断AMapLocation对象不为空，当定位错误码类型为0时定位成功
-        if (aMapLocation != null) {
-            if (aMapLocation.getErrorCode() == 0) {
-                aMapLocation.getLocationType(); // 获取当前定位结果来源，如网络定位结果，详见定位类型表
-                aMapLocation.getLatitude(); // 获取纬度
-                aMapLocation.getLongitude(); // 获取经度
-                aMapLocation.getAccuracy(); // 获取精度信息
-                aMapLocation.getAddress(); // 地址，如果option中设置isNeedAddress为false，则没有此结果，网络定位结果中会有地址信息，GPS定位不返回地址信息。
-                aMapLocation.getCountry(); // 国家信息
-                aMapLocation.getProvince(); // 省信息
-                aMapLocation.getCity(); // 城市信息
-                aMapLocation.getDistrict(); // 城区信息
-                aMapLocation.getStreet(); // 街道信息
-                aMapLocation.getStreetNum(); // 街道门牌号信息
-                aMapLocation.getCityCode(); // 城市编码
-                aMapLocation.getAdCode(); // 地区编码
-                aMapLocation.getAoiName(); // 获取当前定位点的AOI信息
-                aMapLocation.getBuildingId(); // 获取当前室内定位的建筑物Id
-                aMapLocation.getFloor(); // 获取当前室内定位的楼层
-                aMapLocation.getGpsAccuracyStatus(); // 获取GPS的当前状态
-                // 获取定位时间
-                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                Date date = new Date(aMapLocation.getTime());
-                df.format(date);
-                // 如果不设置标志位，拖动地图时，它会不断将地图移动到当前的位置
-                if (isFirstLocation) {
-                    // 设置缩放级别
-                    aMap.moveCamera(CameraUpdateFactory.zoomTo(17));
-                    // 将地图移动到定位点
-                    aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude())));
-                    // 点击定位按钮 能够将地图的中心移动到定位点
-                    mListener.onLocationChanged(aMapLocation);
-                    isFirstLocation = false;
-                }
-            } else {
-                // 定位失败时，可通过ErrCode（错误码）信息来确定失败的原因，errInfo是错误信息，详见错误码表。
-                Log.e("HLQ_Struggle", "location Error, ErrCode:"
-                        + aMapLocation.getErrorCode() + ", errInfo:"
-                        + aMapLocation.getErrorInfo());
-            }
-        }
-    }
-
-    @Override
-    public void activate(OnLocationChangedListener onLocationChangedListener) {
-        mListener = onLocationChangedListener;
-    }
-
-    @Override
-    public void deactivate() {
-        mListener = null;
-    }
-
 
 
     @Override
@@ -305,5 +319,65 @@ public class ShowMapActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @TargetApi(Build.VERSION_CODES.N)
+    @Override
+    public void onLocationChanged(AMapLocation aMapLocation) {
+        // 解析AMapLocation对象
+        // 判断AMapLocation对象不为空，当定位错误码类型为0时定位成功
+        if (aMapLocation != null) {
+            if (aMapLocation.getErrorCode() == 0) {
+                aMapLocation.getLocationType(); // 获取当前定位结果来源，如网络定位结果，详见定位类型表
+                aMapLocation.getLatitude(); // 获取纬度
+                aMapLocation.getLongitude(); // 获取经度
+                aMapLocation.getAccuracy(); // 获取精度信息
+                aMapLocation.getAddress(); // 地址，如果option中设置isNeedAddress为false，则没有此结果，网络定位结果中会有地址信息，GPS定位不返回地址信息。
+                aMapLocation.getCountry(); // 国家信息
+                aMapLocation.getProvince(); // 省信息
+                aMapLocation.getCity(); // 城市信息
+                aMapLocation.getDistrict(); // 城区信息
+                aMapLocation.getStreet(); // 街道信息
+                aMapLocation.getStreetNum(); // 街道门牌号信息
+                aMapLocation.getCityCode(); // 城市编码
+                aMapLocation.getAdCode(); // 地区编码
+                aMapLocation.getAoiName(); // 获取当前定位点的AOI信息
+                aMapLocation.getBuildingId(); // 获取当前室内定位的建筑物Id
+                aMapLocation.getFloor(); // 获取当前室内定位的楼层
+                aMapLocation.getGpsAccuracyStatus(); // 获取GPS的当前状态
+                // 获取定位时间
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date date = new Date(aMapLocation.getTime());
+                df.format(date);
+
+                Log.d("swy", "onLocationChanged: "+aMapLocation.getLocationType()+aMapLocation.getDistrict()+aMapLocation.getProvince());
+                // 如果不设置标志位，拖动地图时，它会不断将地图移动到当前的位置
+
+                if (isFirstLocation) {
+                    // 设置缩放级别
+                    aMap.moveCamera(CameraUpdateFactory.zoomTo(17));
+                    // 将地图移动到定位点
+                    aMap.moveCamera(CameraUpdateFactory.changeLatLng(new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude())));
+                    // 点击定位按钮 能够将地图的中心移动到定位点
+                    mListener.onLocationChanged(aMapLocation);
+                    isFirstLocation = false;
+                }
+            } else {
+                // 定位失败时，可通过ErrCode（错误码）信息来确定失败的原因，errInfo是错误信息，详见错误码表。
+                Log.e("HLQ_Struggle", "location Error, ErrCode:"
+                        + aMapLocation.getErrorCode() + ", errInfo:"
+                        + aMapLocation.getErrorInfo());
+            }
+        }
+    }
+
+    @Override
+    public void activate(LocationSource.OnLocationChangedListener onLocationChangedListener) {
+        mListener = onLocationChangedListener;
+    }
+
+    @Override
+    public void deactivate() {
+        mListener = null;
     }
 }

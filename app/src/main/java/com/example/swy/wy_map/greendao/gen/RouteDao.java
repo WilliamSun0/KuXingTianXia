@@ -30,6 +30,8 @@ public class RouteDao extends AbstractDao<Route, Long> {
         public final static Property RouteTitle = new Property(3, String.class, "routeTitle", false, "ROUTE_TITLE");
     }
 
+    private DaoSession daoSession;
+
 
     public RouteDao(DaoConfig config) {
         super(config);
@@ -37,6 +39,7 @@ public class RouteDao extends AbstractDao<Route, Long> {
     
     public RouteDao(DaoConfig config, DaoSession daoSession) {
         super(config, daoSession);
+        this.daoSession = daoSession;
     }
 
     /** Creates the underlying database table. */
@@ -103,6 +106,12 @@ public class RouteDao extends AbstractDao<Route, Long> {
         if (routeTitle != null) {
             stmt.bindString(4, routeTitle);
         }
+    }
+
+    @Override
+    protected final void attachEntity(Route entity) {
+        super.attachEntity(entity);
+        entity.__setDaoSession(daoSession);
     }
 
     @Override

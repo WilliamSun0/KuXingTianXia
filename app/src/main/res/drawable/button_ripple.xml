@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--点击圆形波纹，本来想放在圆形手动动画按钮上的-->
+
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+
+    android:color="@android:color/holo_green_light">
+
+    <item>
+
+        <shape android:shape="oval">
+
+            <solid android:color="#aaff6422"/>
+
+        </shape>
+
+    </item>
+
+</ripple>

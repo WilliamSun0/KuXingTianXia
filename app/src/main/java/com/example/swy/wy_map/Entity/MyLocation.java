@@ -4,6 +4,8 @@ import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Generated;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -258,6 +260,7 @@ public class MyLocation {
     public void setGpsAccuracyStatus(int GpsAccuracyStatus) {
         this.GpsAccuracyStatus = GpsAccuracyStatus;
     }
+
 
 
 }
