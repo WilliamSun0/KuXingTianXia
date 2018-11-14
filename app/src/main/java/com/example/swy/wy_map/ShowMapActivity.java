@@ -7,12 +7,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.icu.text.SimpleDateFormat;
-import android.location.LocationListener;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -25,16 +22,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.app.Activity;
-import android.graphics.Color;
-import android.os.Bundle;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -44,14 +32,8 @@ import com.amap.api.maps.AMap;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
-import com.amap.api.maps.UiSettings;
 import com.amap.api.maps.model.LatLng;
-import com.amap.api.maps.model.MyLocationStyle;
-import com.example.swy.wy_map.Entity.Route;
 import com.example.swy.wy_map.Service.LocationService;
-import com.example.swy.wy_map.Service.LocationSource_Listener;
-import com.example.swy.wy_map.dao.SaveLocation;
-import com.example.swy.wy_map.dao.SaveRoute;
 
 import java.util.Date;
 
@@ -86,6 +68,8 @@ public class ShowMapActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_map);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         initView();
         // 创建地图
         mapView.onCreate(savedInstanceState);
@@ -99,8 +83,9 @@ public class ShowMapActivity extends AppCompatActivity
         Intent bindService = new Intent(ShowMapActivity.this,LocationService.class);
         bindService(bindService,connection,BIND_AUTO_CREATE);
 
-        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-
+        final FloatingActionButton fab_start = (FloatingActionButton) findViewById(R.id.fab_start);
+        final FloatingActionButton fab_pause = (FloatingActionButton) findViewById(R.id.fab_pause);
+        final FloatingActionButton fab_end = (FloatingActionButton) findViewById(R.id.fab_end);
         //ImageButton buttonStart = (ImageButton)findViewById(R.id.btn_add);
 
         //final Animation translateAnimation = AnimationUtils.loadAnimation(this, R.anim.view_animation);
@@ -111,34 +96,59 @@ public class ShowMapActivity extends AppCompatActivity
         //buttonStart.layout();
 
 
-        fab.setOnClickListener(new View.OnClickListener() {
+        fab_start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                fab.hide();
-//                if (fabClick){
-//                    Snackbar.make(view, "正在暂停", Snackbar.LENGTH_LONG)
-//                            .setAction("结束", new View.OnClickListener() {
-//                                @Override
-//                                public void onClick(View view) {
-//
-//                                    stopLocationService();
-//                                }
-//                            }).show();
-//                    fabClick = false;
-//                }else {
-//                    startLocationService();
-//                    Snackbar.make(view, "开始记录路线", Snackbar.LENGTH_LONG)
-//                            .setAction("取消", new View.OnClickListener() {
-//                                @Override
-//                                public void onClick(View view) {
-//                                    stopLocationService();
-//                                }
-//                            }).show();
-//                    fabClick = true;
+                fab_start.hide();
 
+
+                startLocationService();
+                Snackbar.make(view, "开始记录路线", Snackbar.LENGTH_LONG)
+                        .setAction("取消", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+
+                                stopLocationService();
+                                fab_start.show();
+                            }
+                        }).show();
+
+                fab_pause.show();
+                fab_end.show();
             }
         });
+
+        fab_pause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                //fab_pause.setImageResource();
+                fab_pause.hide();
+
+
+                startLocationService();
+                Snackbar.make(view, "开始记录路线", Snackbar.LENGTH_LONG)
+                        .setAction("取消", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+
+                                stopLocationService();
+                                fab_start.show();
+                            }
+                        }).show();
+
+                fab_pause.show();
+                fab_end.show();
+            }
+        });
+
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
 
 
 

@@ -17,7 +17,9 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+            app:popupTheme="@style/AppTheme.PopupOverlay" >
+
+            </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>
 
@@ -35,20 +37,22 @@
         android:src="@drawable/ic_fab_start" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_continue"
+        android:visibility="invisible"
+        android:id="@+id/fab_pause"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
+        android:layout_gravity="bottom|left"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/i" />
+        android:src="@drawable/ic_fab_pause" />
 
     <android.support.design.widget.FloatingActionButton
+        android:visibility="invisible"
         android:id="@+id/fab_end"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
+        android:layout_gravity="bottom|right"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_fab_start" />
+        android:src="@drawable/ic_fab_end" />
 
     <!--<ImageButton-->
         <!--android:id="@+id/btn_add"-->

@@ -13,8 +13,8 @@ import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.example.swy.wy_map.Entity.MyLocation;
 import com.example.swy.wy_map.Entity.Route;
-import com.example.swy.wy_map.dao.SaveLocation;
-import com.example.swy.wy_map.dao.SaveRoute;
+import com.example.swy.wy_map.dao.MyLocationDao;
+import com.example.swy.wy_map.dao.MyRouteDao;
 
 import java.util.Date;
 
@@ -181,7 +181,7 @@ public class LocationService extends Service {
 
 
                     Route route = new Route(null,date,null,null);
-                    SaveRoute.insertRoute(route);
+                    MyRouteDao.insertRoute(route);
                     MyLocation myLocation = new MyLocation(null,date,
 route.getRouteId(),null,null,
                             LocationType,
@@ -202,7 +202,7 @@ route.getRouteId(),null,null,
                     BuildingId,
 
                     GpsAccuracyStatus);
-                    SaveLocation.insertLocation(myLocation);
+                    MyLocationDao.insertLocation(myLocation);
 
 
                 } else {

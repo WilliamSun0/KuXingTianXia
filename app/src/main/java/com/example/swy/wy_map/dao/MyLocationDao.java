@@ -7,7 +7,7 @@ import com.example.swy.wy_map.MyApplication;
  * Created by swy on 2018/11/6.
  */
 
-public class SaveLocation {
+public class MyLocationDao {
     public static void insertLocation(MyLocation myLocation) {
         MyApplication.getDaoSession().getMyLocationDao().insert(myLocation);
     }
