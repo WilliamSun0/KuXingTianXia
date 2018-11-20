@@ -1,4 +1,4 @@
-package com.example.swy.wy_map.Service;
+package com.example.swy.wy_map.service;
 
 import android.app.Service;
 import android.content.Intent;
@@ -11,12 +11,13 @@ import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
-import com.example.swy.wy_map.Entity.MyLocation;
-import com.example.swy.wy_map.Entity.Route;
-import com.example.swy.wy_map.dao.MyLocationDao;
-import com.example.swy.wy_map.dao.MyRouteDao;
+import com.example.swy.wy_map.dao.GreenDaoManager;
+import com.example.swy.wy_map.entity.MyLocation;
+import com.example.swy.wy_map.entity.Route;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 包名： com.amap.locationservicedemo
@@ -75,6 +76,14 @@ public class LocationService extends Service {
     private          String BuildingId; // 获取当前室内定位的建筑物Id
 
     private          int GpsAccuracyStatus; // 获取GPS的当前状态
+
+    Route route = new Route();
+
+
+    MyLocation myLocation = new MyLocation();
+
+    List<MyLocation> locations = new ArrayList<>();
+    List<Route> routes = new ArrayList<>();
     /**
      * 处理息屏关掉wifi的delegate类
      */
@@ -86,22 +95,10 @@ public class LocationService extends Service {
     private boolean mIsWifiCloseable = false;
 
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        super.onStartCommand(intent, flags, startId);
-        //applyNotiKeepMech(); //开启利用notification提高进程优先级的机制
+    private static boolean writeRoute = true;
 
-        Log.i("swy", "onStartCommand: ");
+    private GreenDaoManager greenDaoManager;
 
-        if (mWifiAutoCloseDelegate.isUseful(getApplicationContext())) {
-            mIsWifiCloseable = true;
-            mWifiAutoCloseDelegate.initOnServiceStarted(getApplicationContext());
-        }
-
-        startLocation();
-
-        return START_STICKY;
-    }
 
 
     @Override
@@ -109,7 +106,7 @@ public class LocationService extends Service {
         //unApplyNotiKeepMech();
         stopLocation();
 
-        Log.i("swy", "onDestroy: ");
+        Log.d("swy", "onDestroy: ");
 
         super.onDestroy();
     }
@@ -117,7 +114,7 @@ public class LocationService extends Service {
     /**
      * 启动定位
      */
-    void startLocation() {
+    void prepareLocation() {
         stopLocation();
 
         if (null == mLocationClient) {
@@ -134,7 +131,7 @@ public class LocationService extends Service {
         mLocationOption.setNeedAddress(true);
         mLocationClient.setLocationOption(mLocationOption);
         mLocationClient.setLocationListener(locationListener);
-        mLocationClient.startLocation();
+
     }
 
     /**
@@ -179,11 +176,14 @@ public class LocationService extends Service {
                     df.format(date);
                     // 如果不设置标志位，拖动地图时，它会不断将地图移动到当前的位置
 
+                    Log.d("locationserivce,save",Latitude+"");
 
-                    Route route = new Route(null,date,null,null);
-                    MyRouteDao.insertRoute(route);
+                    route.setRouteId(null);
+                    route.setRouteTitle(null);
+
+
                     MyLocation myLocation = new MyLocation(null,date,
-route.getRouteId(),null,null,
+                    route.getRouteId(),null,null,
                             LocationType,
                     Latitude,
                     Longitude,
@@ -202,7 +202,12 @@ route.getRouteId(),null,null,
                     BuildingId,
 
                     GpsAccuracyStatus);
-                    MyLocationDao.insertLocation(myLocation);
+
+                    if (writeRoute){
+                        routes.add(route);
+                        locations.add(myLocation);
+                    }
+
 
 
                 } else {
@@ -234,12 +239,36 @@ route.getRouteId(),null,null,
     public LocationServiceBinder mBinder;
 
     public class LocationServiceBinder extends Binder{
-        public void onFinishBind(){
+        public void startLocate(String s){
+            mLocationClient.startLocation();
+
+            greenDaoManager = GreenDaoManager.getInstance();
+
         }
 
         public void pauseLocate(){
-            Log.d("ServiceTest","  ----->  getString");
+            Log.d("swy"," locateservice ----->  pause");
 
+            writeRoute = false;
+        }
+
+        public void continueLocate(){
+            Log.d("swy"," locateservice ----->  continue");
+
+            writeRoute = true;
+        }
+
+        public void endLocate(){
+            Log.d("swy"," locateservice ----->  end");
+
+            writeRoute = false;
+            mLocationClient.stopLocation();
+
+            greenDaoManager.getSession().getRouteDao().insertInTx(routes);
+
+            greenDaoManager.getSession().getMyLocationDao().insertInTx(locations);
+
+            Log.d("swy"," locateservice ----->  write to database");
         }
     }
 
@@ -248,9 +277,11 @@ route.getRouteId(),null,null,
         if (mBinder == null) {
             mBinder = new LocationServiceBinder();
         }
+        Log.d("swy", "onStartCommand: ");
+
+        prepareLocation();
         return mBinder;
     }
-
 
 
 }

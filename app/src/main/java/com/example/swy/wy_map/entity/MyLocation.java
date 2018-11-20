@@ -1,11 +1,9 @@
-package com.example.swy.wy_map.Entity;
+package com.example.swy.wy_map.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Generated;
 
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.Date;
 
 /**

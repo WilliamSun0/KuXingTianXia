@@ -1,4 +1,4 @@
-package com.example.swy.wy_map.Entity;
+package com.example.swy.wy_map.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;

@@ -8,9 +8,9 @@ import org.greenrobot.greendao.database.Database;
 import org.greenrobot.greendao.identityscope.IdentityScopeType;
 import org.greenrobot.greendao.internal.DaoConfig;
 
-import com.example.swy.wy_map.Entity.MyLocation;
-import com.example.swy.wy_map.Entity.Route;
-import com.example.swy.wy_map.Entity.TourNote;
+import com.example.swy.wy_map.entity.MyLocation;
+import com.example.swy.wy_map.entity.Route;
+import com.example.swy.wy_map.entity.TourNote;
 
 import com.example.swy.wy_map.greendao.gen.MyLocationDao;
 import com.example.swy.wy_map.greendao.gen.RouteDao;

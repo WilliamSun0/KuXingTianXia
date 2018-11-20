@@ -2,6 +2,8 @@ package com.example.swy.wy_map;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -10,11 +12,14 @@ import android.icu.text.SimpleDateFormat;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -23,6 +28,8 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.EditText;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -33,12 +40,14 @@ import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.LatLng;
-import com.example.swy.wy_map.Service.LocationService;
+import com.example.swy.wy_map.fragment.MakeRouteFragment;
+import com.example.swy.wy_map.navigation_activity.RouteListActivity;
+import com.example.swy.wy_map.service.LocationService;
 
 import java.util.Date;
 
 public class ShowMapActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,LocationSource, AMapLocationListener {
+        implements NavigationView.OnNavigationItemSelectedListener, LocationSource, AMapLocationListener {
 
 
     private MapView mapView;
@@ -49,12 +58,16 @@ public class ShowMapActivity extends AppCompatActivity
 
     private LocationService.LocationServiceBinder mybind;
 
-
     private LocationSource.OnLocationChangedListener mListener;
 
     boolean fabClick = false;
 
     // 标识首次定位
+
+    public LocationService.LocationServiceBinder getMybind() {
+        return mybind;
+    }
+
     private boolean isFirstLocation = true;
 
     @Override
@@ -75,49 +88,130 @@ public class ShowMapActivity extends AppCompatActivity
         mapView.onCreate(savedInstanceState);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.d("swy", "onCreate: 申请定位权限");
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
         } else {
             initGaoDeMap();
         }
 
-        Intent bindService = new Intent(ShowMapActivity.this,LocationService.class);
-        bindService(bindService,connection,BIND_AUTO_CREATE);
+        View llContentBottomSheet = findViewById(R.id.ll_content_bottom_sheet);
+
+        final BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(llContentBottomSheet);
+
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+
+                switch (newState) {
+                    case BottomSheetBehavior.STATE_COLLAPSED:
+                        Log.e("Bottom Sheet Behaviour", "STATE_COLLAPSED");
+                        break;
+                    case BottomSheetBehavior.STATE_DRAGGING:
+                        Log.e("Bottom Sheet Behaviour", "STATE_DRAGGING");
+                        break;
+                    case BottomSheetBehavior.STATE_EXPANDED:
+                        Log.e("Bottom Sheet Behaviour", "STATE_EXPANDED");
+                        break;
+                    case BottomSheetBehavior.STATE_HIDDEN:
+                        Log.e("Bottom Sheet Behaviour", "STATE_HIDDEN");
+                        break;
+                    case BottomSheetBehavior.STATE_SETTLING:
+                        Log.e("Bottom Sheet Behaviour", "STATE_SETTLING");
+                        break;
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+
+            }
+        });
+
+        final EditText routeTitleET = (EditText) findViewById(R.id.route_title);
+        final Button confirmRouteButton = (Button) findViewById(R.id.confirm_route);
+
+        Intent bindService = new Intent(ShowMapActivity.this, LocationService.class);
+        bindService(bindService, connection, BIND_AUTO_CREATE);
 
         final FloatingActionButton fab_start = (FloatingActionButton) findViewById(R.id.fab_start);
         final FloatingActionButton fab_pause = (FloatingActionButton) findViewById(R.id.fab_pause);
         final FloatingActionButton fab_end = (FloatingActionButton) findViewById(R.id.fab_end);
+        final FloatingActionButton fab_continue = (FloatingActionButton) findViewById(R.id.fab_continue);
+
+
         //ImageButton buttonStart = (ImageButton)findViewById(R.id.btn_add);
 
         //final Animation translateAnimation = AnimationUtils.loadAnimation(this, R.anim.view_animation);
         // 步骤2:创建 动画对象 并传入设置的动画效果xml文件
 
-       // buttonStart.startAnimation(translateAnimation);
+        // buttonStart.startAnimation(translateAnimation);
 
         //buttonStart.layout();
 
+        //Button xxx = findViewById(R.id.confirm_route)
 
         fab_start.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(final View view) {
 
-                fab_start.hide();
+                MakeRouteFragment makeRouteFragment = new MakeRouteFragment();
+                FragmentManager fragmentManager = getFragmentManager();
+                FragmentTransaction transaction = fragmentManager. beginTransaction();
+                transaction.replace(R.id.make_route_layout, makeRouteFragment);
+                //加入返回栈
+                transaction.addToBackStack(null);
+
+                transaction.commit();
 
 
-                startLocationService();
-                Snackbar.make(view, "开始记录路线", Snackbar.LENGTH_LONG)
-                        .setAction("取消", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
 
-                                stopLocationService();
-                                fab_start.show();
-                            }
-                        }).show();
 
-                fab_pause.show();
-                fab_end.show();
+
+//                confirmRouteButton.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        mybind.startLocate(routeTitleET.getText().toString());
+//                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+//                        fab_pause.show();
+//                        fab_end.show();
+//                    }
+//                });
+
+                if (!fabClick) {
+
+                }
+
             }
         });
+
+
+//        fab_start.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(final View view) {
+//
+//                fab_start.hide();
+//                fabClick = false;
+//                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+//
+//
+//
+//                confirmRouteButton.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        mybind.startLocate(routeTitleET.getText().toString());
+//                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+//                        fab_pause.show();
+//                        fab_end.show();
+//                    }
+//                });
+//
+//                if (!fabClick) {
+//
+//                }
+//
+//            }
+//        });
 
         fab_pause.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -125,21 +219,46 @@ public class ShowMapActivity extends AppCompatActivity
 
                 //fab_pause.setImageResource();
                 fab_pause.hide();
+                fab_continue.show();
 
 
-                startLocationService();
-                Snackbar.make(view, "开始记录路线", Snackbar.LENGTH_LONG)
-                        .setAction("取消", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
+                //startLocationService();
+                Snackbar.make(view, "暂停记录路线", Snackbar.LENGTH_LONG).show();
 
-                                stopLocationService();
-                                fab_start.show();
-                            }
-                        }).show();
 
+            }
+        });
+
+
+        fab_continue.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                //fab_pause.setImageResource();
+                fab_continue.hide();
                 fab_pause.show();
-                fab_end.show();
+
+
+                //startLocationService();
+                Snackbar.make(view, "继续记录路线", Snackbar.LENGTH_LONG).show();
+
+            }
+        });
+
+        fab_end.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                //fab_pause.setImageResource();
+                fab_pause.hide();
+                fab_continue.hide();
+                fab_end.hide();
+                fab_start.show();
+
+
+                //startLocationService();
+                Snackbar.make(view, "保存记录路线", Snackbar.LENGTH_LONG).show();
+
             }
         });
 
@@ -151,24 +270,35 @@ public class ShowMapActivity extends AppCompatActivity
         toggle.syncState();
 
 
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+
+
+
     }
 
-    private void startLocationService(){
-        getApplicationContext().startService(new Intent(this, LocationService.class));
+    public void startReportRoute(String s){
+        mybind.startLocate(s);
     }
-    private void stopLocationService() {
-        getApplicationContext().stopService(new Intent(this, LocationService.class));
+    public void pauseReportRoute(){
+        mybind.pauseLocate();
     }
+    public void continueReportRoute(){
+        mybind.continueLocate();
+    }
+    public void endReportRoute(){
+        mybind.endLocate();
+    }
+
+
+
 
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mybind = (LocationService.LocationServiceBinder) service;
-            mybind.pauseLocate();
+            Log.d("mainactivity", "onServiceConnected: ");
         }
 
         @Override
@@ -176,7 +306,6 @@ public class ShowMapActivity extends AppCompatActivity
 
         }
     };
-
 
 
     @Override
@@ -239,7 +368,7 @@ public class ShowMapActivity extends AppCompatActivity
         //设置定位场景，目前支持三种场景（签到、出行、运动，默认无场景）
         mLocationOption.setLocationPurpose(AMapLocationClientOption.AMapLocationPurpose.SignIn);
 
-        if(null != mLocationClient){
+        if (null != mLocationClient) {
             mLocationClient.setLocationOption(mLocationOption);
             //设置场景模式后最好调用一次stop，再调用start以保证场景模式生效
             mLocationClient.stopLocation();
@@ -322,7 +451,9 @@ public class ShowMapActivity extends AppCompatActivity
             //在Activity页面调用startActvity启动离线地图组件
             startActivity(new Intent(this.getApplicationContext(),
                     com.amap.api.maps.offlinemap.OfflineMapActivity.class));
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.nav_history) {
+            startActivity(new Intent(this.getApplicationContext(),
+                    RouteListActivity.class));
 
         }
 
@@ -360,7 +491,7 @@ public class ShowMapActivity extends AppCompatActivity
                 Date date = new Date(aMapLocation.getTime());
                 df.format(date);
 
-                Log.d("swy", "onLocationChanged: "+aMapLocation.getLocationType()+aMapLocation.getDistrict()+aMapLocation.getProvince());
+                Log.d("swy", "onLocationChanged: " + aMapLocation.getLocationType() + aMapLocation.getDistrict() + aMapLocation.getProvince());
                 // 如果不设置标志位，拖动地图时，它会不断将地图移动到当前的位置
 
                 if (isFirstLocation) {
@@ -390,4 +521,9 @@ public class ShowMapActivity extends AppCompatActivity
     public void deactivate() {
         mListener = null;
     }
+
+
+
+
+
 }

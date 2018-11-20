@@ -9,10 +9,23 @@
     tools:context="com.example.swy.wy_map.ShowMapActivity"
     tools:showIn="@layout/app_bar_show_map">
 
-    <com.amap.api.maps.MapView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/map"
+
+
+    <FrameLayout
+        android:id="@+id/make_route_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+
+        <com.amap.api.maps.MapView
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+             />
+
+
+    </FrameLayout>
+
+
 
 </android.support.constraint.ConstraintLayout>

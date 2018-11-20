@@ -1,4 +1,4 @@
-package com.example.swy.wy_map.Service;
+package com.example.swy.wy_map.service;
 
 import android.content.Context;
 

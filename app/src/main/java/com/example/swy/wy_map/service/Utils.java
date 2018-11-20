@@ -1,7 +1,7 @@
 /**
  *
  */
-package com.example.swy.wy_map.Service;
+package com.example.swy.wy_map.service;
 
 import android.app.Notification;
 import android.app.Service;

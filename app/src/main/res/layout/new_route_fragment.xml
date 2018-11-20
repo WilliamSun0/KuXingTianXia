@@ -1,0 +1,37 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    android:background="@color/white"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:text="路线标题:"
+        android:textSize="10sp"
+        android:gravity="left"/>
+
+    <EditText
+        android:id="@+id/route_title"
+        android:minLines="1"
+        android:layout_width="match_parent"
+        android:layout_height="40dp" />
+
+
+    <Button
+        android:text="开始"
+        android:id="@+id/confirm_route"
+        android:layout_width="match_parent"
+        android:layout_height="50dp" />
+
+    <Button
+        android:text="取消"
+        android:id="@+id/cancel_route"
+        android:layout_width="match_parent"
+        android:layout_height="50dp" />
+
+</LinearLayout>

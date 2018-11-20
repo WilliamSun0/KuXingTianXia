@@ -58,9 +58,19 @@
         </activity>
         <activity android:name="com.amap.api.maps.offlinemap.OfflineMapActivity"
             android:screenOrientation="portrait"/>
+        <activity
+            android:name=".navigation_activity.RouteListActivity"
+            android:label="旅行路线"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
         <service android:name="com.amap.api.location.APSService"/>
         <service
-            android:name=".Service.LocationService"
+            android:name=".service.LocationService"
             >
             <intent-filter>
                 <action android:name="com.example.swy.wy_map.LocationService"></action>

@@ -7,6 +7,9 @@
     tools:context="com.example.swy.wy_map.ShowMapActivity">
 
 
+
+
+
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -53,6 +56,20 @@
         android:layout_gravity="bottom|right"
         android:layout_margin="@dimen/fab_margin"
         android:src="@drawable/ic_fab_end" />
+
+
+    <android.support.design.widget.FloatingActionButton
+        android:visibility="invisible"
+        android:id="@+id/fab_continue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_fab_continue" />
+
+
+
+    <include layout="@layout/content_bottom_sheet" />
 
     <!--<ImageButton-->
         <!--android:id="@+id/btn_add"-->
