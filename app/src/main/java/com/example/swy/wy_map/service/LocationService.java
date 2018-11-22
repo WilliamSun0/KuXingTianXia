@@ -14,6 +14,8 @@ import com.amap.api.location.AMapLocationListener;
 import com.example.swy.wy_map.dao.GreenDaoManager;
 import com.example.swy.wy_map.entity.MyLocation;
 import com.example.swy.wy_map.entity.Route;
+import com.example.swy.wy_map.greendao.gen.MyLocationDao;
+import com.example.swy.wy_map.greendao.gen.RouteDao;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,12 +31,12 @@ import java.util.List;
  * @email guibao.ggb@alibaba-inc.com
  * <p>
  * 类说明：后台服务定位
- *
  * <p>
- *     modeified by liangchao , on 2017/01/17
- *     update:
- *     1. 只有在由息屏造成的网络断开造成的定位失败时才点亮屏幕
- *     2. 利用notification机制增加进程优先级
+ * <p>
+ * modeified by liangchao , on 2017/01/17
+ * update:
+ * 1. 只有在由息屏造成的网络断开造成的定位失败时才点亮屏幕
+ * 2. 利用notification机制增加进程优先级
  * </p>
  */
 public class LocationService extends Service {
@@ -59,31 +61,29 @@ public class LocationService extends Service {
     private String note;
 
     private int LocationType; // 获取当前定位结果来源，如网络定位结果，详见定位类型表
-    private           double Latitude; // 获取纬度
-    private           double Longitude; // 获取经度
+    private double Latitude; // 获取纬度
+    private double Longitude; // 获取经度
     private double Altitude;
-    private           float Accuracy; // 获取精度信息
-    private           String Address; // 地址，如果option中设置isNeedAddress为false，则没有此结果，网络定位结果中会有地址信息，GPS定位不返回地址信息。
-    private            String Country; // 国家信息
-    private            String Province; // 省信息
-    private            String City; // 城市信息
-    private           String District; // 城区信息
-    private          String Street; // 街道信息
-    private            String StreetNum; // 街道门牌号信息
-    private           String CityCode; // 城市编码
-    private          String AdCode; // 地区编码
-    private          String AoiName; // 获取当前定位点的AOI信息
-    private          String BuildingId; // 获取当前室内定位的建筑物Id
+    private float Accuracy; // 获取精度信息
+    private String Address; // 地址，如果option中设置isNeedAddress为false，则没有此结果，网络定位结果中会有地址信息，GPS定位不返回地址信息。
+    private String Country; // 国家信息
+    private String Province; // 省信息
+    private String City; // 城市信息
+    private String District; // 城区信息
+    private String Street; // 街道信息
+    private String StreetNum; // 街道门牌号信息
+    private String CityCode; // 城市编码
+    private String AdCode; // 地区编码
+    private String AoiName; // 获取当前定位点的AOI信息
+    private String BuildingId; // 获取当前室内定位的建筑物Id
 
-    private          int GpsAccuracyStatus; // 获取GPS的当前状态
+    private int GpsAccuracyStatus; // 获取GPS的当前状态
 
-    Route route = new Route();
+    private Route route;
 
-
-    MyLocation myLocation = new MyLocation();
+    private MyLocation myLocation;
 
     List<MyLocation> locations = new ArrayList<>();
-    List<Route> routes = new ArrayList<>();
     /**
      * 处理息屏关掉wifi的delegate类
      */
@@ -99,6 +99,7 @@ public class LocationService extends Service {
 
     private GreenDaoManager greenDaoManager;
 
+    private String routeTitle;
 
 
     @Override
@@ -176,38 +177,34 @@ public class LocationService extends Service {
                     df.format(date);
                     // 如果不设置标志位，拖动地图时，它会不断将地图移动到当前的位置
 
-                    Log.d("locationserivce,save",Latitude+"");
-
-                    route.setRouteId(null);
-                    route.setRouteTitle(null);
+                    Log.d("locationserivce,save", Latitude + "");
 
 
-                    MyLocation myLocation = new MyLocation(null,date,
-                    route.getRouteId(),null,null,
+                    myLocation = new MyLocation(null, date, null, null, null,
                             LocationType,
-                    Latitude,
-                    Longitude,
-                    Altitude,
-                    Accuracy,
-                    Address,
-                    Country,
-                    Province,
-                    City,
-                    District,
-                    Street,
-                    StreetNum,
-                    CityCode ,
-                    AdCode ,
-                    AoiName,
-                    BuildingId,
+                            Latitude,
+                            Longitude,
+                            Altitude,
+                            Accuracy,
+                            Address,
+                            Country,
+                            Province,
+                            City,
+                            District,
+                            Street,
+                            StreetNum,
+                            CityCode,
+                            AdCode,
+                            AoiName,
+                            BuildingId,
 
-                    GpsAccuracyStatus);
+                            GpsAccuracyStatus);
 
-                    if (writeRoute){
-                        routes.add(route);
+
+                    if (writeRoute) {
+
                         locations.add(myLocation);
                     }
-
 
 
                 } else {
@@ -226,7 +223,7 @@ public class LocationService extends Service {
             if (aMapLocation.getErrorCode() == AMapLocation.LOCATION_SUCCESS) {
                 mWifiAutoCloseDelegate.onLocateSuccess(getApplicationContext(), PowerManagerUtil.getInstance().isScreenOn(getApplicationContext()), NetUtil.getInstance().isMobileAva(getApplicationContext()));
             } else {
-                mWifiAutoCloseDelegate.onLocateFail(getApplicationContext() , aMapLocation.getErrorCode() , PowerManagerUtil.getInstance().isScreenOn(getApplicationContext()), NetUtil.getInstance().isWifiCon(getApplicationContext()));
+                mWifiAutoCloseDelegate.onLocateFail(getApplicationContext(), aMapLocation.getErrorCode(), PowerManagerUtil.getInstance().isScreenOn(getApplicationContext()), NetUtil.getInstance().isWifiCon(getApplicationContext()));
             }
 
         }
@@ -235,40 +232,60 @@ public class LocationService extends Service {
     };
 
 
-
     public LocationServiceBinder mBinder;
 
-    public class LocationServiceBinder extends Binder{
-        public void startLocate(String s){
+    public class LocationServiceBinder extends Binder {
+        public void startLocate(String s) {
+            routeTitle = s;
+
+            route = new Route();
+
+            route.setRouteTitle(s);
+            route.setStartTime(new Date());
+
             mLocationClient.startLocation();
 
             greenDaoManager = GreenDaoManager.getInstance();
 
+
         }
 
-        public void pauseLocate(){
-            Log.d("swy"," locateservice ----->  pause");
+        public void pauseLocate() {
+            Log.d("swy", " locateservice ----->  pause");
 
             writeRoute = false;
         }
 
-        public void continueLocate(){
-            Log.d("swy"," locateservice ----->  continue");
+        public void continueLocate() {
+            Log.d("swy", " locateservice ----->  continue");
 
             writeRoute = true;
         }
 
-        public void endLocate(){
-            Log.d("swy"," locateservice ----->  end");
+        public void endLocate() {
+            Log.d("swy", " locateservice ----->  end");
 
-            writeRoute = false;
+
             mLocationClient.stopLocation();
+            route.setEndTime(new Date());
 
-            greenDaoManager.getSession().getRouteDao().insertInTx(routes);
+            greenDaoManager.getSession().getRouteDao().insert(route);
 
-            greenDaoManager.getSession().getMyLocationDao().insertInTx(locations);
+            MyLocationDao myLocationDao = greenDaoManager.getSession().getMyLocationDao();
 
-            Log.d("swy"," locateservice ----->  write to database");
+            //myLocationDao.insertInTx(locations);
+
+            for (MyLocation item : locations) {
+                Log.d("show address", String.valueOf(item.getLocationId()));
+                item.setRouteId(route.getRouteId());
+                myLocationDao.insert(item);
+            }
+
+            locations.clear();
+
+            writeRoute = true;
+
+            Log.d("swy", " locateservice ----->  write to database");
         }
     }
 
@@ -280,6 +297,8 @@ public class LocationService extends Service {
         Log.d("swy", "onStartCommand: ");
 
         prepareLocation();
+
+
         return mBinder;
     }
 

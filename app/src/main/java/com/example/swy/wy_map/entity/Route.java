@@ -23,7 +23,6 @@ public class Route {
     @Id(autoincrement = true)
     private Long routeId;
 
-
     private Date startTime;
     private Date endTime;
 

@@ -30,6 +30,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -69,6 +70,12 @@ public class ShowMapActivity extends AppCompatActivity
     }
 
     private boolean isFirstLocation = true;
+    private boolean pauseContinueFlag = false;
+
+    private View llContentBottomSheet;
+    private  BottomSheetBehavior bottomSheetBehavior;
+
+    private FloatingActionButton fab_start;
 
     @Override
     protected void onResume() {
@@ -81,8 +88,7 @@ public class ShowMapActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_map);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        initNavBar();
         initView();
         // 创建地图
         mapView.onCreate(savedInstanceState);
@@ -93,9 +99,11 @@ public class ShowMapActivity extends AppCompatActivity
             initGaoDeMap();
         }
 
-        View llContentBottomSheet = findViewById(R.id.ll_content_bottom_sheet);
+        llContentBottomSheet = findViewById(R.id.ll_content_bottom_sheet);
 
-        final BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(llContentBottomSheet);
+        bottomSheetBehavior = BottomSheetBehavior.from(llContentBottomSheet);
+
+        bottomSheetBehavior.setHideable(true);
 
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
@@ -128,16 +136,47 @@ public class ShowMapActivity extends AppCompatActivity
             }
         });
 
-        final EditText routeTitleET = (EditText) findViewById(R.id.route_title);
-        final Button confirmRouteButton = (Button) findViewById(R.id.confirm_route);
-
         Intent bindService = new Intent(ShowMapActivity.this, LocationService.class);
         bindService(bindService, connection, BIND_AUTO_CREATE);
 
-        final FloatingActionButton fab_start = (FloatingActionButton) findViewById(R.id.fab_start);
-        final FloatingActionButton fab_pause = (FloatingActionButton) findViewById(R.id.fab_pause);
-        final FloatingActionButton fab_end = (FloatingActionButton) findViewById(R.id.fab_end);
-        final FloatingActionButton fab_continue = (FloatingActionButton) findViewById(R.id.fab_continue);
+        fab_start = (FloatingActionButton) findViewById(R.id.fab_start);
+//        final FloatingActionButton fab_pause = (FloatingActionButton) findViewById(R.id.fab_pause);
+//        final FloatingActionButton fab_end = (FloatingActionButton) findViewById(R.id.fab_end);
+//        final FloatingActionButton fab_continue = (FloatingActionButton) findViewById(R.id.fab_continue);
+
+
+        Button endButton = (Button) findViewById(R.id.button_end);
+        final Button pauseButton = (Button) findViewById(R.id.button_pause);
+
+        endButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                endReportRoute();
+                Toast.makeText(MyApplication.getContext(), "行程结束", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+
+        pauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (pauseContinueFlag){
+                    continueReportRoute();
+                    Toast.makeText(MyApplication.getContext(), "行程继续", Toast.LENGTH_SHORT).show();
+                    pauseButton.setText("暂停行程");
+                    pauseContinueFlag = false;
+                }else{
+                    pauseReportRoute();
+                    Toast.makeText(MyApplication.getContext(), "行程暂停", Toast.LENGTH_SHORT).show();
+                    //为啥把这些控件都设成类的属性，因为作用域，匿名内部类必须是final
+                    pauseButton.setText("继续行程");
+                    pauseContinueFlag = true;
+                }
+
+            }
+        });
 
 
         //ImageButton buttonStart = (ImageButton)findViewById(R.id.btn_add);
@@ -163,20 +202,7 @@ public class ShowMapActivity extends AppCompatActivity
                 transaction.addToBackStack(null);
 
                 transaction.commit();
-
-
-
-
-
-//                confirmRouteButton.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//                        mybind.startLocate(routeTitleET.getText().toString());
-//                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-//                        fab_pause.show();
-//                        fab_end.show();
-//                    }
-//                });
+                fab_start.hide();
 
                 if (!fabClick) {
 
@@ -213,56 +239,65 @@ public class ShowMapActivity extends AppCompatActivity
 //            }
 //        });
 
-        fab_pause.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+//        fab_pause.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//
+//                //fab_pause.setImageResource();
+//                fab_pause.hide();
+//                fab_continue.show();
+//
+//
+//                //startLocationService();
+//                Snackbar.make(view, "暂停记录路线", Snackbar.LENGTH_LONG).show();
+//
+//
+//            }
+//        });
+//
+//
+//        fab_continue.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//
+//                //fab_pause.setImageResource();
+//                fab_continue.hide();
+//                fab_pause.show();
+//
+//
+//                //startLocationService();
+//                Snackbar.make(view, "继续记录路线", Snackbar.LENGTH_LONG).show();
+//
+//            }
+//        });
+//
+//        fab_end.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//
+//                //fab_pause.setImageResource();
+//                fab_pause.hide();
+//                fab_continue.hide();
+//                fab_end.hide();
+//                fab_start.show();
+//
+//
+//                //startLocationService();
+//                Snackbar.make(view, "保存记录路线", Snackbar.LENGTH_LONG).show();
+//
+//            }
+//        });
 
-                //fab_pause.setImageResource();
-                fab_pause.hide();
-                fab_continue.show();
 
+    }
 
-                //startLocationService();
-                Snackbar.make(view, "暂停记录路线", Snackbar.LENGTH_LONG).show();
+    public void riseFabStart(){
+        fab_start.show();
+    }
 
-
-            }
-        });
-
-
-        fab_continue.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                //fab_pause.setImageResource();
-                fab_continue.hide();
-                fab_pause.show();
-
-
-                //startLocationService();
-                Snackbar.make(view, "继续记录路线", Snackbar.LENGTH_LONG).show();
-
-            }
-        });
-
-        fab_end.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                //fab_pause.setImageResource();
-                fab_pause.hide();
-                fab_continue.hide();
-                fab_end.hide();
-                fab_start.show();
-
-
-                //startLocationService();
-                Snackbar.make(view, "保存记录路线", Snackbar.LENGTH_LONG).show();
-
-            }
-        });
-
-
+    public void initNavBar(){
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -272,13 +307,13 @@ public class ShowMapActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-
-
-
     }
 
     public void startReportRoute(String s){
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+
+        bottomSheetBehavior.setHideable(false);
+
         mybind.startLocate(s);
     }
     public void pauseReportRoute(){
@@ -288,6 +323,13 @@ public class ShowMapActivity extends AppCompatActivity
         mybind.continueLocate();
     }
     public void endReportRoute(){
+
+        bottomSheetBehavior.setHideable(true);
+
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+        fab_start.show();
+
         mybind.endLocate();
     }
 

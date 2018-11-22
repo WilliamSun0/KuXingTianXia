@@ -4,14 +4,17 @@ import android.app.Fragment;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.amap.api.services.share.ShareSearch;
+import com.example.swy.wy_map.MyApplication;
 import com.example.swy.wy_map.R;
 import com.example.swy.wy_map.ShowMapActivity;
 import com.example.swy.wy_map.service.LocationService;
@@ -47,6 +50,10 @@ public class MakeRouteFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 getFragmentManager().popBackStack();
+
+                ShowMapActivity activity = (ShowMapActivity)getActivity();
+
+                activity.riseFabStart();
             }
         });
         startRouteButton.setOnClickListener(new View.OnClickListener() {
@@ -55,9 +62,18 @@ public class MakeRouteFragment extends Fragment {
 
                 ShowMapActivity activity = (ShowMapActivity)getActivity();
 
+                Toast.makeText(MyApplication.getContext(),routeTitleET.getText().toString() , Toast.LENGTH_SHORT).show();
+
+                Log.d("swy",routeTitleET.getText().toString());
+
                 activity.startReportRoute(routeTitleET.getText().toString());
+
+                getFragmentManager().popBackStack();
+
 
             }
         });
+
+
     }
 }

@@ -65,8 +65,8 @@ public class RouteListAdapter extends BaseAdapter {
         viewHolder.tv_title.setText(route.getRouteTitle());
         Log.i("insertstaff: 3",route.getRouteTitle());
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        viewHolder.tv_starttime.setText(df.format(route.getStartTime()));
-        viewHolder.tv_endtime.setText(df.format(route.getEndTime()));
+        viewHolder.tv_starttime.setText(String.valueOf(df.format(route.getStartTime())));
+        viewHolder.tv_endtime.setText(String.valueOf(df.format(route.getEndTime())));
 
 
         return convertView;

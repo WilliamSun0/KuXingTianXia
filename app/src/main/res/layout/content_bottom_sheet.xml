@@ -2,13 +2,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/ll_content_bottom_sheet"
     android:layout_width="match_parent"
-    android:layout_height="160dp"
+    android:layout_height="240dp"
     android:background="@color/white"
 
     android:orientation="vertical"
     app:behavior_hideable="false"
-    app:behavior_peekHeight="40dp"
+    app:behavior_peekHeight="60dp"
     app:layout_behavior="@string/bottom_sheet_behavior">
+
+
+
+
+
 
 
     <Button
@@ -22,5 +27,29 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:text="写游记" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+        <Button
+            android:id="@+id/button_pause"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="暂停行程" />
+
+        <Button
+            android:id="@+id/button_end"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="结束行程" />
+
+
+
+    </LinearLayout>
 
 </LinearLayout>
